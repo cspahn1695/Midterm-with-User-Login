@@ -1,11 +1,13 @@
 from beanie import Document
-from pydantic import EmailStr
+from pydantic import EmailStr, Field
+from typing import Optional
+
+
 
 
 class User(Document):
     email: EmailStr
     password: str  # hashed password!
-    is_admin: bool = False
 
     class Settings:
         name = "users"

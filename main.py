@@ -32,7 +32,7 @@ async def on_startup():
 # connect the backend to the frontend (specifically index.html)
 @app.get("/")
 async def home():
-    return FileResponse("frontend/index.html")
+    return FileResponse("frontend/login.html")
 
 
 app.include_router(router) # connect to router
