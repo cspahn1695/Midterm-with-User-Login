@@ -60,6 +60,13 @@ function checkAuth() {
 window.onload = checkAuth;
 // used ChatGPT to help write this code; added comments where appropriate.
 
+function applyAuthHeader(xhr) {
+  const token = localStorage.getItem("accessToken");
+  if (token) {
+    xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+  }
+}
+
 function renderApplications(data) {
   const appDiv = document.getElementById('todos');
   appDiv.innerHTML = '';
@@ -127,6 +134,7 @@ function getAllApplications() { // using an XMLHttpRequest, if xhr.status=200, o
   }
 
   xhr.open('GET', url, true);
+  applyAuthHeader(xhr);
   xhr.send(); // send an HTTP request to the backend server (FASTAPI) at the URL specified in the xhr.open() method
 }
 
@@ -143,6 +151,7 @@ function deleteApplication(id) {
   };
 
   xhr.open('DELETE', `http://127.0.0.1:8000/applications/${id}`, true);
+  applyAuthHeader(xhr);
   xhr.send();
 }
 
@@ -172,6 +181,7 @@ function editApplication(id) {
 
   xhr.open("PUT", `http://127.0.0.1:8000/applications/${id}`, true); // update all parameters
   xhr.setRequestHeader("Content-Type", "application/json");
+  applyAuthHeader(xhr);
 
   xhr.send(JSON.stringify({ // send all these values to backend
     company,
@@ -195,6 +205,12 @@ function createApplication() { // to create an application, define all below par
 
   const xhr = new XMLHttpRequest();
   xhr.onload = () => {
+    if (xhr.status !== 200) {
+      console.error("Create failed:", xhr.response);
+      alert("Create failed. Make sure you are logged in.");
+      return;
+    }
+
     const app = JSON.parse(xhr.response);
 
     if (resumeFile) {
@@ -206,6 +222,7 @@ function createApplication() { // to create an application, define all below par
 
   xhr.open("POST", "http://127.0.0.1:8000/applications/", true);
   xhr.setRequestHeader("Content-Type", "application/json");
+  applyAuthHeader(xhr);
   xhr.send(
     JSON.stringify({ // send all this data to the backend to create a new application
       company, 
@@ -227,6 +244,7 @@ function uploadResume(appId, file) {
   const xhr = new XMLHttpRequest(); // communicate with backend
 
   xhr.open("POST", `http://127.0.0.1:8000/applications/${appId}/resume`, true);
+  applyAuthHeader(xhr);
   xhr.send(formData); // send resume to backend for application at appId to backend
 }
 
@@ -237,8 +255,22 @@ function getMatchScore(appId) { // get scores from backend and send to website
 
   xhr.onload = () => {
     if (xhr.status !== 200) {
+      let detail = "Error getting match score";
+      try {
+        const parsed = JSON.parse(xhr.response || "{}");
+        detail = parsed.detail || detail;
+      } catch (e) {}
       console.error("Match error:", xhr.response);
-      alert("Error getting match score");
+      if (detail.includes("Could not extract enough text from that job link")) {
+        const pastedJobText = prompt(
+          "That URL blocked scraping. Paste the full job description text here and press OK:"
+        );
+        if (pastedJobText && pastedJobText.trim()) {
+          getMatchScoreFromText(appId, pastedJobText);
+          return;
+        }
+      }
+      alert(detail);
       return;
     }
 
@@ -257,7 +289,40 @@ function getMatchScore(appId) { // get scores from backend and send to website
   }; 
 
   xhr.open("GET", `http://127.0.0.1:8000/applications/${appId}/match`, true);
+  applyAuthHeader(xhr);
   xhr.send(); // send the match score, matched skills, and missing skills to frontend
+}
+
+
+function getMatchScoreFromText(appId, jobText) {
+  const xhr = new XMLHttpRequest();
+
+  xhr.onload = () => {
+    if (xhr.status !== 200) {
+      let detail = "Error getting match score";
+      try {
+        const parsed = JSON.parse(xhr.response || "{}");
+        detail = parsed.detail || detail;
+      } catch (e) {}
+      alert(detail);
+      return;
+    }
+
+    const result = JSON.parse(xhr.response);
+    const matched = result.matched_skills.join(", ") || "None";
+    const missing = result.missing_skills.join(", ") || "None";
+
+    alert(
+      "AI Match Score: " + result.match_score + "%\n\n" +
+      "Matched Skills:\n" + matched + "\n\n" +
+      "Missing Skills:\n" + missing
+    );
+  };
+
+  xhr.open("POST", `http://127.0.0.1:8000/applications/${appId}/match`, true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  applyAuthHeader(xhr);
+  xhr.send(JSON.stringify({ job_text: jobText }));
 }
 
 

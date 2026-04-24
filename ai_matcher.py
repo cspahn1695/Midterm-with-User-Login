@@ -7,6 +7,7 @@ from bs4 import BeautifulSoup
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 import re
+from urllib.parse import quote
 
 #had to run 'pip install openai', 'pip install beautifulsoup4', 'pip install pdfminer.six', 'pip install python-multipart', 'pip install requests', 'pip install scikit-learn'
 
@@ -18,26 +19,56 @@ def extract_resume_text(pdf_path):
         return ""
 
 def extract_job_text(url):
+    headers = {"User-Agent": "Mozilla/5.0"}
 
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
+    def _html_to_text(html: str) -> str:
+        if not html:
+            return ""
+        soup = BeautifulSoup(html, "html.parser")
+        for tag in soup(["script", "style", "noscript"]):
+            tag.extract()
+        text = soup.get_text(separator=" ", strip=True)
+        return re.sub(r"\s+", " ", text).strip()
 
-    # Extract job text from URL
-    match = re.search(r"jobs/view/.*-(\d+)", url)
+    def _safe_get_text(target_url: str, timeout: int = 10) -> str:
+        try:
+            response = requests.get(target_url, headers=headers, timeout=timeout)
+            response.raise_for_status()
+            return _html_to_text(response.text)
+        except Exception:
+            return ""
 
-    if match:
-        job_id = match.group(1)
-        api_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}" # best to use job applications from linkedin
-    else:
-        # fallback if job id not found
-        api_url = url
+    # Try to extract LinkedIn job id from common URL shapes.
+    job_id = None
+    patterns = [
+        r"/jobs/view/(?:[^/]*-)?(\d+)",
+        r"currentJobId=(\d+)",
+        r"/view/(\d+)",
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, url)
+        if match:
+            job_id = match.group(1)
+            break
 
-    response = requests.get(api_url, headers=headers)
+    candidates = []
 
-    soup = BeautifulSoup(response.text, "html.parser")
+    # 1) LinkedIn guest endpoint tends to contain the cleaned job description.
+    if job_id:
+        api_url = f"https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/{job_id}"
+        candidates.append(_safe_get_text(api_url))
 
-    return soup.get_text()
+    # 2) Original URL direct fetch.
+    candidates.append(_safe_get_text(url))
+
+    # 3) Fallback: text mirror for JS-heavy / bot-protected pages.
+    # r.jina.ai returns a readable text version of many pages.
+    if url.startswith("http://") or url.startswith("https://"):
+        mirror_url = f"https://r.jina.ai/http://{url.split('://', 1)[1]}"
+        candidates.append(_safe_get_text(mirror_url, timeout=15))
+
+    best = max(candidates, key=len) if candidates else ""
+    return best
 
 
 

@@ -1,10 +1,7 @@
 # application_model.py 
 
-from os import link
-
 from beanie import Document, Link
 from typing import Optional
-from pydantic import Field
 
 from user_model import User
 

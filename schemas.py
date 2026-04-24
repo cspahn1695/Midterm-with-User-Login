@@ -1,13 +1,7 @@
 # used ChatGPT to help write this code; added comments where appropriate.
-from os import link
-
 from pydantic import BaseModel, EmailStr
 from enum import Enum
 from typing import Optional
-from pydantic import BaseModel
-from beanie import Link
-
-from user_model import User
 
 class ApplicationStatus(str, Enum):
     applied = "applied" # all values for ApplicationStatus are applied, interview, rejected, and offer
@@ -21,7 +15,6 @@ class ApplicationPriority(str, Enum): # all values for ApplicationPriority are h
     low = "low"
 
 class ApplicationCreate(BaseModel): # to create a new application, enter company, role, status, and priority. The jobpostinglink and recruitment info are optional.
-    Owner: Link[User]
     company: str
     role: str
     status: ApplicationStatus
@@ -30,7 +23,7 @@ class ApplicationCreate(BaseModel): # to create a new application, enter company
     jobpostinglink: str
 
 class ApplicationResponse(BaseModel): # used so that resume and job posting can be compared for similar phrases/keywords
-    Owner: Link[User]
+    Owner: Optional[str] = None
     id: str
     company: str
     role: str
@@ -46,6 +39,10 @@ class ApplicationResponse(BaseModel): # used so that resume and job posting can 
             id=str(doc.id),
             **doc.dict()
         )
+
+
+class JobTextRequest(BaseModel):
+    job_text: str
 
 class UserCreate(BaseModel):
     email: EmailStr
