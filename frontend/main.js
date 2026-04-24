@@ -20,7 +20,8 @@ function checkAuth() {
 }
   */
 
-function checkAuth() {
+function checkAuth() { // below 4 lines are the main changes made for adding user login functionality: we check if user is logged in, and if they are trying to access the login page or the main app page. 
+// Depending on these factors, we either redirect them to the appropriate page or show them the appropriate view. This keeps the login page and main app page separate, and ensures that only signed-in users can see the main app page.
   const loggedIn = localStorage.getItem("loggedIn") === "true";
   const path = window.location.pathname;
   const isLoginPage = path === "/" || path.endsWith("/login.html");

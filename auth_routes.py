@@ -28,9 +28,6 @@ async def _find_user_by_email(value: str):
     )
 
 
-def _bootstrap_secret() -> str:
-    return os.getenv("ADMIN_BOOTSTRAP_SECRET", "dev-bootstrap-change-me")
-
 
 # ✅ Register (standard user only)
 @router.post("/register")
@@ -44,7 +41,6 @@ async def register(user: UserCreate):
     new_user = User(
         email=email,
         password=hash_password(user.password),
-        is_admin=False,
     )
 
     await new_user.insert()
@@ -59,19 +55,6 @@ async def login(user: UserLogin):
     db_user = await _find_user_by_email(email)
     if not db_user or not verify_password(user.password, db_user.password):
         raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    is_admin = getattr(db_user, "is_admin", False)
-    token, expire = create_access_token(
-        {"email": email, "role": "admin" if is_admin else "user"}
-    )
-
-    return TokenResponse(
-        access_token=token,
-        token_type="bearer",
-        expires_in=int((expire - datetime.now(timezone.utc)).total_seconds()),
-        email=email,
-        is_admin=bool(is_admin),
-    )
 
 
 @router.get("/me")
