@@ -23,7 +23,7 @@ The get_applications function returns any applications corresponding to a specif
 ![alt text](image-10.png)
 The update_Application function also uses _get_owned_application to find the application corresponding to a specific user and app_id. Then, once the specific application of interest is retrieved from the DB, its dictionary can be updated using app.set(updated_dictionary).
 ![alt text](image-12.png)
-![alt text](image-11.png)
+![alt text](image-26.png)
 The delete_Application function has a format similar to the update_application function, except, instead of using app.set(dict), it uses app.delete(). It still needs to get the current user information using _get_current_user, and then get the application of interest using _get_owned_application(app_id, current_user).
 ![alt text](image-13.png)
 Compared to before MongoDB and the user login featuers were implemented, the get_match_score function is almost exactly the same. The user and specific application are (like many of the previously discussed functions) obtained using _get_current_user and _get_owned_application. If either the resume or job posting link doesn't exist, no AI match score can be computed, and a 400 error is returned. From there, the texts from both are extracted, a score is computed using compute_match_score, and analyze_skill_gap is used to find the matched and missing skills (like before). These are all returned. 
