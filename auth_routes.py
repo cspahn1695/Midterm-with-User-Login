@@ -10,7 +10,7 @@ from auth_utils import hash_password, verify_password
 from jwt_handler import create_access_token
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-
+# all authentication handlers are in this file. ChatGPT was used to help with some of this code, as were the in-class examples and planner project.
 def _norm_email(value: str) -> str:
     return (value or "").strip().lower()
 
@@ -29,7 +29,7 @@ async def _find_user_by_email(value: str):
 
 
 
-# ✅ Register (standard user only)
+# Register (standard user only)
 @router.post("/register")
 async def register(user: UserCreate):
     email = _norm_email(str(user.email))
@@ -48,7 +48,7 @@ async def register(user: UserCreate):
     return {"message": "User created"}
 
 
-# ✅ Login
+# Login
 @router.post("/login", response_model=TokenResponse)
 async def login(user: UserLogin):
     email = _norm_email(str(user.email))

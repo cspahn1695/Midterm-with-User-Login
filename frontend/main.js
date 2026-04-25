@@ -20,6 +20,8 @@ function checkAuth() {
 }
   */
 
+// frontend logic, including moving between the index.html page and login.html page, is handled in this file. The main change to support user login functionality is in the checkAuth() function, which runs on page load and checks if the user is logged in. Depending on whether they are logged in and which page they're trying to access, we either show them the login view, the app view, or redirect them to the appropriate page.
+//ChatGPT was used to help write some of this code. The in-class examples and planner project were also referenced for these features. Comments have been added throughout the code to explain the functionality of each part.
 function checkAuth() { // below 4 lines are the main changes made for adding user login functionality: we check if user is logged in, and if they are trying to access the login page or the main app page. 
 // Depending on these factors, we either redirect them to the appropriate page or show them the appropriate view. This keeps the login page and main app page separate, and ensures that only signed-in users can see the main app page.
   const loggedIn = localStorage.getItem("loggedIn") === "true";

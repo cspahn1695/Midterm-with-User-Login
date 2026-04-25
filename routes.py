@@ -21,7 +21,7 @@ from user_model import User
 router = APIRouter(prefix="/applications", tags=["Applications"])
 UPLOAD_FOLDER = "uploads"
 
-
+# all backend routes, including for getting current user, are located in this file. ChatGPT was used to help with some of this code, as were the in-class examples and planner project.
 def _app_owner_filter(current_user: User) -> dict:
     return {"Owner.$id": current_user.id}
 

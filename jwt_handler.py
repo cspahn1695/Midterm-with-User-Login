@@ -8,6 +8,7 @@ from pydantic import BaseModel
 SECRET_KEY = os.getenv("SECRET_KEY", "dev-secret-change-me")
 ALGORITHM = "HS256"
 
+# this code comes from in class planner project, and was used to implement JWT-based authentication. It includes a Pydantic model for the token data, a function to create access tokens, and a function to verify access tokens. The authenticate.py file uses the verify_access_token function to authenticate users based on the token they provide in their requests.
 
 class TokenData(BaseModel):
     email: str
