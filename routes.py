@@ -22,6 +22,7 @@ router = APIRouter(prefix="/applications", tags=["Applications"])
 UPLOAD_FOLDER = "uploads"
 
 # all backend routes, including for getting current user, are located in this file. ChatGPT was used to help with some of this code, as were the in-class examples and planner project.
+# ChatGPT was mainly used for ensuring that the current user and application could be returned for functions that need it (Ex. upload_resume, update_application, etc.).
 def _app_owner_filter(current_user: User) -> dict:
     return {"Owner.$id": current_user.id}
 
